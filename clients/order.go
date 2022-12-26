@@ -11,12 +11,12 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func AddOrder(conn *grpc.ClientConn, ctx context.Context) {
+func O(conn *grpc.ClientConn, ctx context.Context) {
 	c := pb.NewOrderManagementClient(conn)
 	id := uuid.NewV4()
-	description := "xxxxxxx"
-	price := float32(699.00)
-	destination := "hefei"
+	description := "12345"
+	price := float32(399.00)
+	destination := "hefeiluyang"
 
 	r, err := c.AddOrder(ctx, &pb.Order{
 		Id:          id.String(),
