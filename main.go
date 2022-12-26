@@ -25,6 +25,8 @@ func main() {
 
 	defer cancel()
 
-	clients.O(conn, ctx)
+	// clients.AddOrder(conn, ctx)
+	// clients.UpdateOrders(conn, ctx)
+	clients.SearchOrders(conn, ctx)
 
 }
