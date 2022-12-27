@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/shinemost/grpc-up-client/interceptor"
 	"log"
 	"time"
 
@@ -15,7 +16,9 @@ const (
 )
 
 func main() {
-	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(interceptor.OrderUnaryClientInterceptor),
+		grpc.WithStreamInterceptor(interceptor.ClientStreamInterceptor))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -25,9 +28,9 @@ func main() {
 
 	defer cancel()
 
-	// clients.AddOrder(conn, ctx)
-	// clients.UpdateOrders(conn, ctx)
+	//clients.AddOrder(conn, ctx)
+	clients.UpdateOrders(conn, ctx)
 	//clients.SearchOrders(conn, ctx)
-	clients.ProcessOrders(conn, ctx)
+	//clients.ProcessOrders(conn, ctx)
 
 }
