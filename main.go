@@ -27,6 +27,7 @@ func main() {
 
 	// clients.AddOrder(conn, ctx)
 	// clients.UpdateOrders(conn, ctx)
-	clients.SearchOrders(conn, ctx)
+	//clients.SearchOrders(conn, ctx)
+	clients.ProcessOrders(conn, ctx)
 
 }

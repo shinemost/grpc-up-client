@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"time"
 
 	pb "github.com/shinemost/grpc-up-client/pbs"
 	"google.golang.org/grpc"
@@ -72,4 +73,52 @@ func UpdateOrders(conn *grpc.ClientConn, ctx context.Context) {
 		log.Fatalf("%v.CloseAndRecv() got error %v, want %v", updateOrderStream, err, nil)
 	}
 	log.Printf("Update Orders Res : %s", updateRes)
+}
+
+func ProcessOrders(conn *grpc.ClientConn, ctx context.Context) {
+	c := pb.NewOrderManagementClient(conn)
+	streamProcOrder, err := c.ProcessOrders(ctx)
+	if err != nil {
+		log.Fatalf("%v.ProcessOrders(_) = _, %v", c, err)
+	}
+
+	if err := streamProcOrder.Send(&wrapperspb.StringValue{Value: "102"}); err != nil {
+		log.Fatalf("%v.Send(%v) = %v", c, "102", err)
+	}
+
+	if err := streamProcOrder.Send(&wrapperspb.StringValue{Value: "103"}); err != nil {
+		log.Fatalf("%v.Send(%v) = %v", c, "103", err)
+	}
+
+	if err := streamProcOrder.Send(&wrapperspb.StringValue{Value: "104"}); err != nil {
+		log.Fatalf("%v.Send(%v) = %v", c, "104", err)
+	}
+	if err := streamProcOrder.Send(&wrapperspb.StringValue{Value: "105"}); err != nil {
+		log.Fatalf("%v.Send(%v) = %v", c, "105", err)
+	}
+	if err := streamProcOrder.Send(&wrapperspb.StringValue{Value: "106"}); err != nil {
+		log.Fatalf("%v.Send(%v) = %v", c, "106", err)
+	}
+
+	channel := make(chan struct{})
+	go asncClientBidirectionalRPC(streamProcOrder, channel)
+	time.Sleep(time.Millisecond * 1000)
+
+	if err := streamProcOrder.Send(&wrapperspb.StringValue{Value: "101"}); err != nil {
+		log.Fatalf("%v.Send(%v) = %v", c, "101", err)
+	}
+	if err := streamProcOrder.CloseSend(); err != nil {
+		log.Fatal(err)
+	}
+	channel <- struct{}{}
+}
+func asncClientBidirectionalRPC(streamProcOrder pb.OrderManagement_ProcessOrdersClient, c chan struct{}) {
+	for {
+		combinedShipment, errProcOrder := streamProcOrder.Recv()
+		if errProcOrder == io.EOF {
+			break
+		}
+		log.Printf("Combined shipment : ", combinedShipment.OrdersList)
+	}
+	<-c
 }
