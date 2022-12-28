@@ -2,6 +2,7 @@ package clients
 
 import (
 	"context"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
 	"time"
@@ -19,6 +20,8 @@ func AddOrder(conn *grpc.ClientConn, ctx context.Context) {
 	destination := "hefeixinzhan"
 	items := []string{"jjcai", "xfchen1", "qinkun"}
 
+	//睡眠5秒，过deadline
+	//time.Sleep(time.Second * 5)
 	r, err := c.AddOrder(ctx, &pb.Order{
 		Id:          id,
 		Items:       items,
@@ -26,8 +29,11 @@ func AddOrder(conn *grpc.ClientConn, ctx context.Context) {
 		Price:       price,
 		Destination: destination,
 	})
+	//放在这里是不行的，因为已经发起请求结束了，只是没有处理后续逻辑而已
+	//time.Sleep(time.Second * 5)
 	if err != nil {
-		log.Fatalf("Could not add order: %v", err)
+		got := status.Code(err)
+		log.Fatalf("Could not add order: %v", got)
 	}
 	log.Printf("Order ID: %s added successfully", r.GetValue())
 

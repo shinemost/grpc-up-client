@@ -23,13 +23,13 @@ func main() {
 		log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-
+	clientDeadLine := time.Now().Add(time.Second * 2)
+	//ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithDeadline(context.Background(), clientDeadLine)
 	defer cancel()
 
-	//clients.AddOrder(conn, ctx)
-	clients.UpdateOrders(conn, ctx)
+	clients.AddOrder(conn, ctx)
+	//clients.UpdateOrders(conn, ctx)
 	//clients.SearchOrders(conn, ctx)
 	//clients.ProcessOrders(conn, ctx)
 
