@@ -29,8 +29,10 @@ func main() {
 	defer cancel()
 	// Cancelling the RPC
 	//cancel()
+
+	//RPC客户端的多路复用，多个客户端共用一个连接
 	clients.AddOrder(conn, ctx)
-	//clients.UpdateOrders(conn, ctx, cancel)
+	clients.UpdateOrders(conn, ctx, cancel)
 	//clients.SearchOrders(conn, ctx)
 	//clients.ProcessOrders(conn, ctx)
 
