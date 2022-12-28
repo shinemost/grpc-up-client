@@ -2,20 +2,21 @@ package clients
 
 import (
 	"context"
+	pb "github.com/shinemost/grpc-up-client/pbs"
+	epb "google.golang.org/genproto/googleapis/rpc/errdetails"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	"io"
 	"log"
 	"time"
-
-	pb "github.com/shinemost/grpc-up-client/pbs"
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func AddOrder(conn *grpc.ClientConn, ctx context.Context) {
 	c := pb.NewOrderManagementClient(conn)
-	id := "103"
-	description := "11"
+	id := "-1"
+	description := "测试错误的ID造成的异常"
 	price := float32(199.00)
 	destination := "hefeixinzhan"
 	items := []string{"jjcai", "xfchen1", "qinkun"}
@@ -32,12 +33,31 @@ func AddOrder(conn *grpc.ClientConn, ctx context.Context) {
 
 	//放在这里是不行的，因为已经发起请求结束了，只是没有处理后续逻辑而已
 	//time.Sleep(time.Second * 5)
-	if err != nil {
-		got := status.Code(err)
-		log.Fatalf("Could not add order: %v", got)
-	}
-	log.Printf("Order ID: %s added successfully", r.GetValue())
+	//if err != nil {
+	//	got := status.Code(err)
+	//	log.Fatalf("Could not add order: %v", got)
+	//}
+	//log.Printf("Order ID: %s added successfully", r.GetValue())
 
+	if err != nil {
+		errorCode := status.Code(err)
+		if errorCode == codes.InvalidArgument {
+			log.Printf("Invalid Argument Error : %s", errorCode)
+			errorStatus := status.Convert(err)
+			for _, d := range errorStatus.Details() {
+				switch info := d.(type) {
+				case *epb.BadRequest_FieldViolation:
+					log.Printf("Request Field Invalid: %s", info)
+				default:
+					log.Printf("Unexpected error type: %s", info)
+				}
+			}
+		} else {
+			log.Printf("Unhandled error : %s ", errorCode)
+		}
+	} else {
+		log.Print("AddOrder Response -> ", r.Value)
+	}
 }
 
 func SearchOrders(conn *grpc.ClientConn, ctx context.Context) {
