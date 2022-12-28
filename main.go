@@ -28,9 +28,9 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// Cancelling the RPC
-	cancel()
-	clients.AddOrder(conn, ctx)
-	//clients.UpdateOrders(conn, ctx)
+	//cancel()
+	//clients.AddOrder(conn, ctx)
+	clients.UpdateOrders(conn, ctx, cancel)
 	//clients.SearchOrders(conn, ctx)
 	//clients.ProcessOrders(conn, ctx)
 

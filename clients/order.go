@@ -29,6 +29,7 @@ func AddOrder(conn *grpc.ClientConn, ctx context.Context) {
 		Price:       price,
 		Destination: destination,
 	})
+
 	//放在这里是不行的，因为已经发起请求结束了，只是没有处理后续逻辑而已
 	//time.Sleep(time.Second * 5)
 	if err != nil {
@@ -51,7 +52,7 @@ func SearchOrders(conn *grpc.ClientConn, ctx context.Context) {
 	}
 }
 
-func UpdateOrders(conn *grpc.ClientConn, ctx context.Context) {
+func UpdateOrders(conn *grpc.ClientConn, ctx context.Context, cancel context.CancelFunc) {
 	c := pb.NewOrderManagementClient(conn)
 	updateOrderStream, err := c.UpdateOrders(ctx)
 	if err != nil {
@@ -73,6 +74,8 @@ func UpdateOrders(conn *grpc.ClientConn, ctx context.Context) {
 	if err := updateOrderStream.Send(&updOrder3); err != nil {
 		log.Fatalf("%v.Send(%v) = %v", updateOrderStream, updOrder3, err)
 	}
+
+	cancel()
 
 	updateRes, err := updateOrderStream.CloseAndRecv()
 	if err != nil {
