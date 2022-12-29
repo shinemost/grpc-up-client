@@ -2,10 +2,12 @@ package clients
 
 import (
 	"context"
+	"fmt"
 	pb "github.com/shinemost/grpc-up-client/pbs"
 	epb "google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"io"
@@ -15,21 +17,48 @@ import (
 
 func AddOrder(conn *grpc.ClientConn, ctx context.Context) {
 	c := pb.NewOrderManagementClient(conn)
-	id := "-1"
+	id := "100"
 	description := "测试错误的ID造成的异常"
 	price := float32(199.00)
 	destination := "hefeixinzhan"
 	items := []string{"jjcai", "xfchen1", "qinkun"}
 
+	md := metadata.Pairs(
+		"timestamp", time.Now().Format(time.StampNano),
+		"kn", "vn",
+	)
+	mdCtx := metadata.NewOutgoingContext(context.Background(), md)
+	ctxA := metadata.AppendToOutgoingContext(mdCtx, "k1", "v1", "k1", "v2", "k2", "v3")
+
+	var header, trailer metadata.MD
+
 	//睡眠5秒，过deadline
 	//time.Sleep(time.Second * 5)
-	r, err := c.AddOrder(ctx, &pb.Order{
+	r, err := c.AddOrder(ctxA, &pb.Order{
 		Id:          id,
 		Items:       items,
 		Description: description,
 		Price:       price,
 		Destination: destination,
-	})
+	}, grpc.Header(&header), grpc.Trailer(&trailer))
+
+	// Reading the headers
+	if t, ok := header["timestamp"]; ok {
+		log.Printf("timestamp from header:\n")
+		for i, e := range t {
+			fmt.Printf(" %d. %s\n", i, e)
+		}
+	} else {
+		log.Fatal("timestamp expected but doesn't exist in header")
+	}
+	if l, ok := header["location"]; ok {
+		log.Printf("location from header:\n")
+		for i, e := range l {
+			fmt.Printf(" %d. %s\n", i, e)
+		}
+	} else {
+		log.Fatal("location expected but doesn't exist in header")
+	}
 
 	//放在这里是不行的，因为已经发起请求结束了，只是没有处理后续逻辑而已
 	//time.Sleep(time.Second * 5)
