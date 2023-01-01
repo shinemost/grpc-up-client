@@ -3,16 +3,18 @@ package clients
 import (
 	"context"
 	"fmt"
+	"io"
+	"log"
+	"time"
+
 	pb "github.com/shinemost/grpc-up-client/pbs"
 	epb "google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
-	"io"
-	"log"
-	"time"
 )
 
 func AddOrder(conn *grpc.ClientConn, ctx context.Context) {
@@ -40,7 +42,7 @@ func AddOrder(conn *grpc.ClientConn, ctx context.Context) {
 		Description: description,
 		Price:       price,
 		Destination: destination,
-	}, grpc.Header(&header), grpc.Trailer(&trailer))
+	}, grpc.Header(&header), grpc.Trailer(&trailer), grpc.UseCompressor(gzip.Name))
 
 	// Reading the headers
 	if t, ok := header["timestamp"]; ok {
