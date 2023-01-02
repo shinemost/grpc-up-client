@@ -5,19 +5,29 @@ import (
 	"log"
 
 	"github.com/shinemost/grpc-up-client/clients"
-	"github.com/shinemost/grpc-up-client/interceptor"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 )
 
 const (
-	address = "localhost:50051"
+	address  = "localhost:50051"
+	hostname = "localhost"
+	crtFile  = "certs/localhost.crt"
 )
 
 func main() {
-	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUnaryInterceptor(interceptor.OrderUnaryClientInterceptor),
-		grpc.WithStreamInterceptor(interceptor.ClientStreamInterceptor))
+	//基于公钥证书创建TLS证书
+	creds, err := credentials.NewClientTLSFromFile(crtFile, hostname)
+	if err != nil {
+		log.Fatalf("failde to load credentials:%v", err)
+	}
+
+	conn, err := grpc.Dial(
+		address,
+		grpc.WithTransportCredentials(creds),
+		// grpc.WithUnaryInterceptor(interceptor.OrderUnaryClientInterceptor),
+		// grpc.WithStreamInterceptor(interceptor.ClientStreamInterceptor),
+	)
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
@@ -32,7 +42,7 @@ func main() {
 	//cancel()
 
 	//RPC客户端的多路复用，多个客户端共用一个连接
-	clients.AddOrder(conn, ctx)
+	clients.P(conn, ctx)
 	//clients.UpdateOrders(conn, ctx, cancel)
 	//clients.SearchOrders(conn, ctx)
 	//clients.ProcessOrders(conn, ctx)
