@@ -12,7 +12,7 @@ import (
 const (
 	address  = "localhost:50051"
 	hostname = "localhost"
-	crtFile  = "certs/localhost.crt"
+	crtFile  = "certs/server.pem"
 )
 
 func main() {
