@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"log"
+	"os"
 
 	"github.com/shinemost/grpc-up-client/clients"
 	"google.golang.org/grpc"
@@ -12,21 +15,45 @@ import (
 const (
 	address  = "localhost:50051"
 	hostname = "localhost"
-	crtFile  = "certs/server.pem"
+	caFile   = "certs/ca.crt"
+	crtFile  = "certs/clinet.pem"
+	keyFile  = "certs/clinet.key"
 )
 
 func main() {
 	//基于公钥证书创建TLS证书
-	creds, err := credentials.NewClientTLSFromFile(crtFile, hostname)
+	// creds, err := credentials.NewClientTLSFromFile(crtFile, hostname)
+	// if err != nil {
+	// 	log.Fatalf("failde to load credentials:%v", err)
+	// }
+
+	cert, err := tls.LoadX509KeyPair(crtFile, keyFile)
 	if err != nil {
-		log.Fatalf("failde to load credentials:%v", err)
+		log.Fatalf("failed to load client key pair : %s", err)
+	}
+
+	certPool := x509.NewCertPool()
+	ca, err := os.ReadFile(caFile)
+	if err != nil {
+		log.Fatalf("cloud not find ca cert: %s", err)
+	}
+
+	if ok := certPool.AppendCertsFromPEM(ca); !ok {
+		log.Fatalf("failed to add ca certs")
 	}
 
 	conn, err := grpc.Dial(
 		address,
-		grpc.WithTransportCredentials(creds),
+		// grpc.WithTransportCredentials(creds),
 		// grpc.WithUnaryInterceptor(interceptor.OrderUnaryClientInterceptor),
 		// grpc.WithStreamInterceptor(interceptor.ClientStreamInterceptor),
+		grpc.WithTransportCredentials(
+			credentials.NewTLS(&tls.Config{
+				ServerName:   hostname,
+				Certificates: []tls.Certificate{cert},
+				RootCAs:      certPool,
+			}),
+		),
 	)
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
