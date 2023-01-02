@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"github.com/shinemost/grpc-up-client/models"
 	"log"
 	"os"
 
@@ -32,6 +33,11 @@ func main() {
 		log.Fatalf("failed to load client key pair : %s", err)
 	}
 
+	auth := models.BasicAuth{
+		Username: "admin",
+		Password: "admin",
+	}
+
 	certPool := x509.NewCertPool()
 	ca, err := os.ReadFile(caFile)
 	if err != nil {
@@ -39,11 +45,12 @@ func main() {
 	}
 
 	if ok := certPool.AppendCertsFromPEM(ca); !ok {
-		log.Fatalf("failed to add ca certs")
+		log.Fatalf("failed to add ca cerWts")
 	}
 
 	conn, err := grpc.Dial(
 		address,
+		grpc.WithPerRPCCredentials(auth),
 		// grpc.WithTransportCredentials(creds),
 		// grpc.WithUnaryInterceptor(interceptor.OrderUnaryClientInterceptor),
 		// grpc.WithStreamInterceptor(interceptor.ClientStreamInterceptor),
