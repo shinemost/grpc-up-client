@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"github.com/shinemost/grpc-up-client/models"
+	"google.golang.org/grpc/credentials/oauth"
 	"log"
 	"os"
 
@@ -33,10 +34,11 @@ func main() {
 		log.Fatalf("failed to load client key pair : %s", err)
 	}
 
-	auth := models.BasicAuth{
-		Username: "admin",
-		Password: "admin",
-	}
+	//auth := models.BasicAuth{
+	//	Username: "admin",
+	//	Password: "admin",
+	//}
+	auth := oauth.NewOauthAccess(models.FetchToken())
 
 	certPool := x509.NewCertPool()
 	ca, err := os.ReadFile(caFile)

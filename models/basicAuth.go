@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"encoding/base64"
+	"golang.org/x/oauth2"
 )
 
 type BasicAuth struct {
@@ -20,4 +21,10 @@ func (b BasicAuth) GetRequestMetadata(ctx context.Context, in ...string) (map[st
 
 func (b BasicAuth) RequireTransportSecurity() bool {
 	return true
+}
+
+func FetchToken() *oauth2.Token {
+	return &oauth2.Token{
+		AccessToken: "some-secret-token",
+	}
 }
