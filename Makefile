@@ -8,5 +8,8 @@ genclientcerts:
 	openssl req -new -nodes -key certs/clinet.key -out certs/clinet.csr -subj "/C=cn/OU=myorg/O=mytest/CN=localhost" -config ./openssl.cnf -extensions v3_req 
 	openssl x509 -req -days 365 -in certs/clinet.csr -out certs/clinet.pem -CA certs/ca.crt -CAkey certs/ca.key -CAcreateserial -extfile ./openssl.cnf -extensions v3_req 
 
+mock:
+	rm -rf mocks/*
+	mockgen -package mocks -destination mocks/prodinfo_mock.go github.com/shinemost/grpc-up-client/pbs ProductInfoClient
 
-.PHONY: genclientcerts
+.PHONY: genclientcerts mock
