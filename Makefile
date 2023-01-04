@@ -15,6 +15,9 @@ mock:
 build:
 	docker build --no-cache -t supertain147/grpc-client:v1.0 .
 
+push:
+	docker push supertain147/grpc-client:v1.0
+
 run:
 	docker run -d --name grpc-client --network=grpc-net --hostname=grpc-client  supertain147/grpc-client:v1.0
 
