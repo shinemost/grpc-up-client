@@ -12,4 +12,11 @@ mock:
 	rm -rf mocks/*
 	mockgen -package mocks -destination mocks/prodinfo_mock.go github.com/shinemost/grpc-up-client/pbs ProductInfoClient
 
-.PHONY: genclientcerts mock
+build:
+	docker build --no-cache -t supertain147/grpc-client:v1.0 .
+
+run:
+	docker run -d --name grpc-client  supertain147/grpc-client:v1.0
+
+
+.PHONY: genclientcerts mock build run
