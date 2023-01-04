@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: grpc-client
+spec:
+  completions: 5
+  parallelism: 10
+  template:
+    spec:
+      containers:
+        - name: grpc-client
+          image: supertain147/grpc-client:v1.3
+      restartPolicy: Never
+  backoffLimit: 4

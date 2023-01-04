@@ -5,7 +5,7 @@ LABEL maintainer="hjfu"
 ENV GO11MODULE=on \
   CGO_ENABLE=on \
   GOOS=linux \
-  GOARCH=amd64
+  GOARCH=arm64
 
 WORKDIR /app
 
