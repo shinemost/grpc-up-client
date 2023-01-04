@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	address  = "localhost:50051"
+	address  = "grpc-server:50051"
 	hostname = "localhost"
 	caFile   = "certs/ca.crt"
 	crtFile  = "certs/clinet.pem"
