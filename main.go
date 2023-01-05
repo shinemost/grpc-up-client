@@ -5,6 +5,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"github.com/shinemost/grpc-up-client/models"
+	"go.opencensus.io/examples/exporter"
+	"go.opencensus.io/plugin/ocgrpc"
+	"go.opencensus.io/stats/view"
 	"google.golang.org/grpc/credentials/oauth"
 	"log"
 	"os"
@@ -15,7 +18,8 @@ import (
 )
 
 const (
-	address  = "grpc-server-service:30652"
+	//address = "grpc-server-service.local:50051"
+	address  = "localhost:50051"
 	hostname = "localhost"
 	caFile   = "certs/ca.crt"
 	crtFile  = "certs/clinet.pem"
@@ -28,6 +32,15 @@ func main() {
 	// if err != nil {
 	// 	log.Fatalf("failde to load credentials:%v", err)
 	// }
+
+	// Register stats and trace exporters to export
+	// the collected data.
+	view.RegisterExporter(&exporter.PrintExporter{})
+
+	// Register the view to collect gRPC client stats.
+	if err := view.Register(ocgrpc.DefaultClientViews...); err != nil {
+		log.Fatal(err)
+	}
 
 	cert, err := tls.LoadX509KeyPair(crtFile, keyFile)
 	if err != nil {
@@ -63,6 +76,7 @@ func main() {
 				RootCAs:      certPool,
 			}),
 		),
+		grpc.WithStatsHandler(&ocgrpc.ClientHandler{}),
 	)
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)

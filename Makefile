@@ -18,6 +18,9 @@ build:
 push:
 	docker push supertain147/grpc-client:v1.0
 
+buildx:
+	docker buildx build --platform linux/amd64,linux/arm64 -t supertain147/grpc-client:v2.0 --push .
+
 run:
 	docker run -d --name grpc-client --network=grpc-net --hostname=grpc-client  supertain147/grpc-client:v1.0
 

@@ -9,6 +9,6 @@ spec:
     spec:
       containers:
         - name: grpc-client
-          image: supertain147/grpc-client:v1.3
+          image: supertain147/grpc-client:v2.0
       restartPolicy: Never
   backoffLimit: 4
