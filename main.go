@@ -4,13 +4,19 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"log"
+	"net/http"
+	"os"
+	"sync"
+
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shinemost/grpc-up-client/models"
 	"go.opencensus.io/examples/exporter"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/stats/view"
 	"google.golang.org/grpc/credentials/oauth"
-	"log"
-	"os"
 
 	"github.com/shinemost/grpc-up-client/clients"
 	"google.golang.org/grpc"
@@ -27,6 +33,11 @@ const (
 )
 
 func main() {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	req := prometheus.NewRegistry()
+	grpcMetrics := grpc_prometheus.NewClientMetrics()
+	req.MustRegister(grpcMetrics)
 	//基于公钥证书创建TLS证书
 	// creds, err := credentials.NewClientTLSFromFile(crtFile, hostname)
 	// if err != nil {
@@ -77,10 +88,24 @@ func main() {
 			}),
 		),
 		grpc.WithStatsHandler(&ocgrpc.ClientHandler{}),
+		grpc.WithUnaryInterceptor(grpcMetrics.UnaryClientInterceptor()),
 	)
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
+
+	httpServer := &http.Server{
+		Handler: promhttp.HandlerFor(req, promhttp.HandlerOpts{}),
+		Addr:    "localhost:9094",
+	}
+
+	go func() {
+		defer wg.Done()
+		if err := httpServer.ListenAndServe(); err != nil {
+			log.Fatal("Unalbe to start a http server")
+		}
+	}()
+
 	defer conn.Close()
 	//clientDeadLine := time.Now().Add(time.Second * 2)
 	//过期时间与截止时间不同，timeout每个请求单独设置，可能客户端发起一个请求会调用多个服务，那么过期时间会叠加，而截止时间deadline则是绝对时间
@@ -96,7 +121,7 @@ func main() {
 	//clients.UpdateOrders(conn, ctx, cancel)
 	//clients.SearchOrders(conn, ctx)
 	//clients.ProcessOrders(conn, ctx)
-
+	wg.Wait()
 }
 
 // func main() {
