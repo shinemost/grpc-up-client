@@ -24,5 +24,8 @@ buildx:
 run:
 	docker run -d --name grpc-client --network=grpc-net --hostname=grpc-client  supertain147/grpc-client:v1.0
 
+apply:
+	kubectl apply -f grpc-client.yaml
 
-.PHONY: genclientcerts mock build run
+
+.PHONY: genclientcerts mock build run push buildx run apply
