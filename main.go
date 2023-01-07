@@ -5,13 +5,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"log"
-	"net/http"
 	"os"
-	"sync"
 
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shinemost/grpc-up-client/models"
 	"go.opencensus.io/examples/exporter"
 	"go.opencensus.io/plugin/ocgrpc"
@@ -33,8 +30,8 @@ const (
 )
 
 func main() {
-	var wg sync.WaitGroup
-	wg.Add(1)
+	// var wg sync.WaitGroup
+	// wg.Add(1)
 	req := prometheus.NewRegistry()
 	grpcMetrics := grpc_prometheus.NewClientMetrics()
 	req.MustRegister(grpcMetrics)
@@ -94,17 +91,17 @@ func main() {
 		log.Fatalf("did not connect: %v", err)
 	}
 
-	httpServer := &http.Server{
-		Handler: promhttp.HandlerFor(req, promhttp.HandlerOpts{}),
-		Addr:    "localhost:9094",
-	}
+	// httpServer := &http.Server{
+	// 	Handler: promhttp.HandlerFor(req, promhttp.HandlerOpts{}),
+	// 	Addr:    "localhost:9094",
+	// }
 
-	go func() {
-		defer wg.Done()
-		if err := httpServer.ListenAndServe(); err != nil {
-			log.Fatal("Unalbe to start a http server")
-		}
-	}()
+	// go func() {
+	// 	defer wg.Done()
+	// 	if err := httpServer.ListenAndServe(); err != nil {
+	// 		log.Fatal("Unalbe to start a http server")
+	// 	}
+	// }()
 
 	defer conn.Close()
 	//clientDeadLine := time.Now().Add(time.Second * 2)
@@ -121,7 +118,7 @@ func main() {
 	//clients.UpdateOrders(conn, ctx, cancel)
 	//clients.SearchOrders(conn, ctx)
 	//clients.ProcessOrders(conn, ctx)
-	wg.Wait()
+	// wg.Wait()
 }
 
 // func main() {
