@@ -6,15 +6,12 @@ import (
 	"crypto/x509"
 	"log"
 	"os"
+	"time"
 
-	"contrib.go.opencensus.io/exporter/jaeger"
-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/prometheus/client_golang/prometheus"
+	grpcopentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/shinemost/grpc-up-client/models"
-	"go.opencensus.io/examples/exporter"
+	"github.com/shinemost/grpc-up-client/tracer"
 	"go.opencensus.io/plugin/ocgrpc"
-	"go.opencensus.io/stats/view"
-	"go.opencensus.io/trace"
 	"google.golang.org/grpc/credentials/oauth"
 
 	"github.com/shinemost/grpc-up-client/clients"
@@ -32,12 +29,12 @@ const (
 )
 
 func main() {
-	initTracing()
+	// initTracing()
 	// var wg sync.WaitGroup
 	// wg.Add(1)
-	req := prometheus.NewRegistry()
-	grpcMetrics := grpc_prometheus.NewClientMetrics()
-	req.MustRegister(grpcMetrics)
+	// req := prometheus.NewRegistry()
+	// grpcMetrics := grpc_prometheus.NewClientMetrics()
+	// req.MustRegister(grpcMetrics)
 	//基于公钥证书创建TLS证书
 	// creds, err := credentials.NewClientTLSFromFile(crtFile, hostname)
 	// if err != nil {
@@ -46,12 +43,12 @@ func main() {
 
 	// Register stats and trace exporters to export
 	// the collected data.
-	view.RegisterExporter(&exporter.PrintExporter{})
+	// view.RegisterExporter(&exporter.PrintExporter{})
 
 	// Register the view to collect gRPC client stats.
-	if err := view.Register(ocgrpc.DefaultClientViews...); err != nil {
-		log.Fatal(err)
-	}
+	// if err := view.Register(ocgrpc.DefaultClientViews...); err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	cert, err := tls.LoadX509KeyPair(crtFile, keyFile)
 	if err != nil {
@@ -74,6 +71,12 @@ func main() {
 		log.Fatalf("failed to add ca cerWts")
 	}
 
+	jaegertracer, closer, err := tracer.NewTracer("grpc-client")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer closer.Close()
+
 	conn, err := grpc.Dial(
 		address,
 		grpc.WithPerRPCCredentials(auth),
@@ -88,7 +91,8 @@ func main() {
 			}),
 		),
 		grpc.WithStatsHandler(&ocgrpc.ClientHandler{}),
-		grpc.WithUnaryInterceptor(grpcMetrics.UnaryClientInterceptor()),
+		// grpc.WithUnaryInterceptor(grpcMetrics.UnaryClientInterceptor()),
+		grpc.WithUnaryInterceptor(grpcopentracing.UnaryClientInterceptor(grpcopentracing.WithTracer(jaegertracer))),
 	)
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
@@ -117,7 +121,11 @@ func main() {
 	//cancel()
 
 	//RPC客户端的多路复用，多个客户端共用一个连接
-	clients.P(conn, ctx)
+	for {
+		clients.P(conn, ctx)
+		time.Sleep(3 * time.Second)
+	}
+
 	//clients.UpdateOrders(conn, ctx, cancel)
 	//clients.SearchOrders(conn, ctx)
 	//clients.ProcessOrders(conn, ctx)
@@ -127,23 +135,3 @@ func main() {
 // func main() {
 // 	clients.StartClient()
 // }
-
-func initTracing() {
-	// This is a demo app with low QPS. trace.AlwaysSample() is used here
-	// to make sure traces are available for observation and analysis.
-	// In a production environment or high QPS setup please use
-	// trace.ProbabilitySampler set at the desired probability.
-	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
-	agentEndpointURI := "localhost:6831"
-	collectorEndpointURI := "http://localhost:14268/api/traces"
-	exporter, err := jaeger.NewExporter(jaeger.Options{
-		CollectorEndpoint: collectorEndpointURI,
-		AgentEndpoint:     agentEndpointURI,
-		ServiceName:       "grpc-clinet",
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	trace.RegisterExporter(exporter)
-
-}
