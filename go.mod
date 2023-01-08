@@ -3,6 +3,7 @@ module github.com/shinemost/grpc-up-client
 go 1.19
 
 require (
+	contrib.go.opencensus.io/exporter/jaeger v0.2.1
 	github.com/golang/mock v1.6.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/prometheus/client_golang v1.14.0
@@ -25,8 +26,11 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
+	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect
 	golang.org/x/net v0.4.0 // indirect
+	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
+	google.golang.org/api v0.100.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 )

@@ -7,12 +7,14 @@ import (
 	"log"
 	"os"
 
+	"contrib.go.opencensus.io/exporter/jaeger"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/shinemost/grpc-up-client/models"
 	"go.opencensus.io/examples/exporter"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/stats/view"
+	"go.opencensus.io/trace"
 	"google.golang.org/grpc/credentials/oauth"
 
 	"github.com/shinemost/grpc-up-client/clients"
@@ -30,6 +32,7 @@ const (
 )
 
 func main() {
+	initTracing()
 	// var wg sync.WaitGroup
 	// wg.Add(1)
 	req := prometheus.NewRegistry()
@@ -124,3 +127,23 @@ func main() {
 // func main() {
 // 	clients.StartClient()
 // }
+
+func initTracing() {
+	// This is a demo app with low QPS. trace.AlwaysSample() is used here
+	// to make sure traces are available for observation and analysis.
+	// In a production environment or high QPS setup please use
+	// trace.ProbabilitySampler set at the desired probability.
+	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+	agentEndpointURI := "localhost:6831"
+	collectorEndpointURI := "http://localhost:14268/api/traces"
+	exporter, err := jaeger.NewExporter(jaeger.Options{
+		CollectorEndpoint: collectorEndpointURI,
+		AgentEndpoint:     agentEndpointURI,
+		ServiceName:       "grpc-clinet",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	trace.RegisterExporter(exporter)
+
+}
