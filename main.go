@@ -9,10 +9,8 @@ import (
 	"time"
 
 	grpcopentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
-	"github.com/shinemost/grpc-up-client/models"
 	"github.com/shinemost/grpc-up-client/tracer"
 	"go.opencensus.io/plugin/ocgrpc"
-	"google.golang.org/grpc/credentials/oauth"
 
 	"github.com/shinemost/grpc-up-client/clients"
 	"google.golang.org/grpc"
@@ -59,7 +57,7 @@ func main() {
 	//	Username: "admin",
 	//	Password: "admin",
 	//}
-	auth := oauth.NewOauthAccess(models.FetchToken())
+	// auth := oauth.NewOauthAccess(models.FetchToken())
 
 	certPool := x509.NewCertPool()
 	ca, err := os.ReadFile(caFile)
@@ -79,7 +77,7 @@ func main() {
 
 	conn, err := grpc.Dial(
 		address,
-		grpc.WithPerRPCCredentials(auth),
+		// grpc.WithPerRPCCredentials(auth),
 		// grpc.WithTransportCredentials(creds),
 		// grpc.WithUnaryInterceptor(interceptor.OrderUnaryClientInterceptor),
 		// grpc.WithStreamInterceptor(interceptor.ClientStreamInterceptor),
@@ -121,7 +119,7 @@ func main() {
 	//cancel()
 
 	//RPC客户端的多路复用，多个客户端共用一个连接
-	for {
+	for i := 0; i < 10; i++ {
 		clients.P(conn, ctx)
 		time.Sleep(3 * time.Second)
 	}
